@@ -8,6 +8,8 @@
 
 AI Recall is a self-hosted memory system that enables AI coding assistants to remember context across sessions. It uses vector search (Qdrant) and graph relationships to provide semantic memory retrieval for your AI tools.
 
+Inspired by [Andrej Karpathy](https://karpathy.ai/)'s explorations of LLM-augmented wikis, this project brings structured, searchable, and persistent memory to your AI coding workflow.
+
 ## ✨ Features
 
 - **🔍 Vector Search**: Semantic similarity search using OpenAI/OpenRouter embeddings
@@ -555,6 +557,15 @@ ai-recall/
 ├── config.example.yaml   # Config template
 └── DEPLOYMENT.md         # Detailed deployment guide
 ```
+
+---
+
+## 🙏 Acknowledgments
+
+This project was inspired by the work of **[Andrej Karpathy](https://karpathy.ai/)** and his explorations of wikis and LLM-augmented knowledge management. His insights on leveraging structured memory systems with language models have been instrumental in shaping the design philosophy behind AI Recall.
+
+- [Andrej's blog on LLM Wikis](https://karpathy.ai/) - Exploring the intersection of wikis and large language models
+- The broader AI community for pushing the boundaries of agent memory systems
 
 ---
 
