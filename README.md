@@ -516,7 +516,7 @@ RUST_LOG=debug ai-recall serve
 
 ## 🏠 Homelab Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment options:
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment options:
 
 - **Docker Compose** (easiest)
 - **Systemd Services** (best performance)
@@ -555,7 +555,10 @@ ai-recall/
 ├── docker-compose.yml    # Docker deployment
 ├── Dockerfile            # Container build
 ├── config.example.yaml   # Config template
-└── DEPLOYMENT.md         # Detailed deployment guide
+├── docs/                 # Documentation
+│   ├── DEPLOYMENT.md     # Detailed deployment guide
+│   └── PHASE1.md         # Implementation notes
+└── AGENTS.md             # AI agent context
 ```
 
 ---
