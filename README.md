@@ -564,7 +564,8 @@ ai-recall/
 
 This project was inspired by the work of **[Andrej Karpathy](https://karpathy.ai/)** and his explorations of wikis and LLM-augmented knowledge management. His insights on leveraging structured memory systems with language models have been instrumental in shaping the design philosophy behind AI Recall.
 
-- [Andrej's blog on LLM Wikis](https://karpathy.ai/) - Exploring the intersection of wikis and large language models
+- [Andrej's Wiki + LLM Gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) - Notes on wiki-style knowledge management with LLMs
+- [Andrej's website](https://karpathy.ai/) - Explorations at the intersection of AI and software
 - The broader AI community for pushing the boundaries of agent memory systems
 
 ---
