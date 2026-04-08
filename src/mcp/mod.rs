@@ -300,13 +300,8 @@ async fn call_tool(
 /// Static files embedded in binary
 static STATIC_DIR: include_dir::Dir<'_> = include_dir::include_dir!("$CARGO_MANIFEST_DIR/ui");
 
-/// Start HTTP server with MCP endpoint and UI
+/// Start HTTP servers - API and UI on separate ports
 pub async fn start_http_server(config: AppConfig) -> Result<()> {
-    info!("Starting MCP HTTP server on {}:{}", config.server.host, config.server.port);
-
-    let addr: std::net::SocketAddr = format!("{}:{}", config.server.host, config.server.port)
-        .parse()?;
-
     let handler = Arc::new(MemoryMcpHandler::new(config.clone()).await?);
     
     // Initialize session auth
@@ -322,34 +317,71 @@ pub async fn start_http_server(config: AppConfig) -> Result<()> {
     
     // Start upload processor
     let _processor_handle = upload_queue.start_processor();
+    
+    // Build API server routes (public/MCP endpoints)
+    let api_app = build_api_router(
+        handler.clone(),
+        session_auth.clone(),
+        upload_queue.clone(),
+        config.server.auth_token.clone(),
+    );
+    
+    // Start API server
+    let api_addr: std::net::SocketAddr = format!("{}:{}", config.server.host, config.server.port)
+        .parse()?;
+    let api_listener = tokio::net::TcpListener::bind(&api_addr).await?;
+    info!("API server listening on {}", api_addr);
+    
+    // Build UI server routes (if enabled)
+    if config.ui_server.enabled {
+        let ui_addr: std::net::SocketAddr = format!("{}:{}", config.ui_server.host, config.ui_server.port)
+            .parse()?;
+        let ui_listener = tokio::net::TcpListener::bind(&ui_addr).await?;
+        
+        let ui_app = build_ui_router(
+            handler.clone(),
+            session_auth.clone(),
+            upload_queue.clone(),
+        );
+        
+        info!("UI server listening on {}", ui_addr);
+        info!("Web interface available at http://{}:{}/", config.ui_server.host, config.ui_server.port);
+        
+        // Run both servers concurrently
+        let api_server = axum::serve(api_listener, api_app);
+        let ui_server = axum::serve(ui_listener, ui_app);
+        
+        tokio::select! {
+            result = api_server => result?,
+            result = ui_server => result?,
+        }
+    } else {
+        info!("UI server disabled");
+        axum::serve(api_listener, api_app).await?;
+    }
+    
+    Ok(())
+}
 
-    // Build HTTP routes
-    let app = if let Some(token) = &config.server.auth_token {
-        info!("Bearer token authentication enabled for API");
-        let auth_state = crate::auth::AuthState::new(token.clone());
+/// Build API server router (MCP endpoints + health)
+fn build_api_router(
+    handler: Arc<MemoryMcpHandler>,
+    _session_auth: Arc<crate::auth::session::SessionAuth>,
+    _upload_queue: Arc<crate::upload::UploadQueue>,
+    auth_token: Option<String>,
+) -> axum::Router {
+    if let Some(token) = auth_token {
+        let auth_state = crate::auth::AuthState::new(token);
         
         axum::Router::new()
-            // Static files and UI
-            .route("/", axum::routing::get(serve_index))
-            .route("/static/*path", axum::routing::get(serve_static))
-            // API endpoints with session auth
-            .route("/api/login", axum::routing::post(handle_login))
-            .route("/api/logout", axum::routing::post(handle_logout))
-            .route("/api/session", axum::routing::get(handle_session_check))
-            .route("/api/upload", axum::routing::post(handle_upload))
-            .route("/api/upload/queue", axum::routing::get(handle_upload_queue))
-            .route("/api/upload/status/:id", axum::routing::get(handle_upload_status))
-            .route("/api/memories", axum::routing::get(handle_list_memories))
-            .route("/api/search", axum::routing::get(handle_search))
-            // Legacy endpoints
+            // Health check (public)
             .route("/health", axum::routing::get(health_check))
+            // MCP endpoints (protected)
             .route("/mcp", axum::routing::post(handle_mcp_request))
             .route("/feedback", axum::routing::post(handle_feedback_request))
             .route("/contradictions", axum::routing::get(handle_contradictions_request))
             // State
             .layer(axum::extract::Extension(handler))
-            .layer(axum::extract::Extension(session_auth))
-            .layer(axum::extract::Extension(upload_queue))
             // Auth middleware
             .layer(axum::middleware::from_fn_with_state(
                 auth_state.clone(),
@@ -357,36 +389,38 @@ pub async fn start_http_server(config: AppConfig) -> Result<()> {
             ))
             .with_state(auth_state)
     } else {
-        warn!("No auth token configured - running without API authentication!");
         axum::Router::new()
-            .route("/", axum::routing::get(serve_index))
-            .route("/static/*path", axum::routing::get(serve_static))
-            .route("/api/login", axum::routing::post(handle_login))
-            .route("/api/logout", axum::routing::post(handle_logout))
-            .route("/api/session", axum::routing::get(handle_session_check))
-            .route("/api/upload", axum::routing::post(handle_upload))
-            .route("/api/upload/queue", axum::routing::get(handle_upload_queue))
-            .route("/api/upload/status/:id", axum::routing::get(handle_upload_status))
-            .route("/api/memories", axum::routing::get(handle_list_memories))
-            .route("/api/search", axum::routing::get(handle_search))
             .route("/health", axum::routing::get(health_check))
             .route("/mcp", axum::routing::post(handle_mcp_request))
             .route("/feedback", axum::routing::post(handle_feedback_request))
             .route("/contradictions", axum::routing::get(handle_contradictions_request))
             .layer(axum::extract::Extension(handler))
-            .layer(axum::extract::Extension(session_auth))
-            .layer(axum::extract::Extension(upload_queue))
-    };
+    }
+}
 
-    // Start HTTP server
-    let listener = tokio::net::TcpListener::bind(&addr).await?;
-    
-    info!("HTTP server listening on {}", addr);
-    info!("UI available at http://{}:{}/", config.server.host, config.server.port);
-
-    axum::serve(listener, app).await?;
-
-    Ok(())
+/// Build UI server router (Web interface + upload API)
+fn build_ui_router(
+    handler: Arc<MemoryMcpHandler>,
+    session_auth: Arc<crate::auth::session::SessionAuth>,
+    upload_queue: Arc<crate::upload::UploadQueue>,
+) -> axum::Router {
+    axum::Router::new()
+        // Static files and UI
+        .route("/", axum::routing::get(serve_index))
+        .route("/static/*path", axum::routing::get(serve_static))
+        // API endpoints with session auth
+        .route("/api/login", axum::routing::post(handle_login))
+        .route("/api/logout", axum::routing::post(handle_logout))
+        .route("/api/session", axum::routing::get(handle_session_check))
+        .route("/api/upload", axum::routing::post(handle_upload))
+        .route("/api/upload/queue", axum::routing::get(handle_upload_queue))
+        .route("/api/upload/status/:id", axum::routing::get(handle_upload_status))
+        .route("/api/memories", axum::routing::get(handle_list_memories))
+        .route("/api/search", axum::routing::get(handle_search))
+        // State
+        .layer(axum::extract::Extension(handler))
+        .layer(axum::extract::Extension(session_auth))
+        .layer(axum::extract::Extension(upload_queue))
 }
 
 /// Health check endpoint

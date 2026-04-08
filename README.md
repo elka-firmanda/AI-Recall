@@ -79,16 +79,25 @@ ai-recall serve
 
 ## 🌐 Web UI
 
-AI Recall includes a built-in web interface for easy memory management:
+AI Recall includes a built-in web interface on a **separate port** from the API:
 
 ```bash
-# Access the UI (default password: admin)
-open http://localhost:8080/
+# Access the UI (port 8081, default password: admin)
+open http://localhost:8081/
+
+# API runs separately on port 8080
+curl http://localhost:8080/health
 
 # Set custom password
 export AI_RECALL_UI_PASSWORD=your-secure-password
-ai-recall serve
+
+# Bind UI to Tailscale only (internal access)
+AI_RECALL_UI_HOST=100.64.0.1 AI_RECALL_UI_PORT=8081 ai-recall serve
 ```
+
+**Security Setup**:
+- **API** (port 8080): Expose to internet via Cloudflare tunnel (bearer token auth)
+- **UI** (port 8081): Internal/Tailscale only (password + session auth)
 
 **Features**:
 - 📄 Drag & drop PDF upload with automatic text extraction

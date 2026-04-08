@@ -41,6 +41,42 @@ fn default_log_level() -> String {
     "info".to_string()
 }
 
+/// UI Server configuration (separate from API)
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UiServerConfig {
+    /// UI server bind address
+    #[serde(default = "default_ui_host")]
+    pub host: String,
+    /// UI server port
+    #[serde(default = "default_ui_port")]
+    pub port: u16,
+    /// Enable UI server
+    #[serde(default = "default_ui_enabled")]
+    pub enabled: bool,
+}
+
+impl Default for UiServerConfig {
+    fn default() -> Self {
+        Self {
+            host: default_ui_host(),
+            port: default_ui_port(),
+            enabled: default_ui_enabled(),
+        }
+    }
+}
+
+fn default_ui_host() -> String {
+    "127.0.0.1".to_string()
+}
+
+fn default_ui_port() -> u16 {
+    8081
+}
+
+fn default_ui_enabled() -> bool {
+    true
+}
+
 /// Storage configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StorageConfig {
@@ -224,6 +260,8 @@ pub struct AppConfig {
     #[serde(default)]
     pub server: ServerConfig,
     #[serde(default)]
+    pub ui_server: UiServerConfig,
+    #[serde(default)]
     pub storage: StorageConfig,
     #[serde(default)]
     pub qdrant: QdrantConfig,
@@ -262,6 +300,7 @@ impl AppConfig {
         }
 
         // 3. Override with environment variables
+        // API Server
         if let Ok(host) = std::env::var("AI_RECALL_SERVER_HOST") {
             config.server.host = host;
         }
@@ -272,6 +311,18 @@ impl AppConfig {
         }
         if let Ok(token) = std::env::var("AI_RECALL_SERVER_AUTH_TOKEN") {
             config.server.auth_token = Some(token);
+        }
+        // UI Server (separate from API)
+        if let Ok(host) = std::env::var("AI_RECALL_UI_HOST") {
+            config.ui_server.host = host;
+        }
+        if let Ok(port) = std::env::var("AI_RECALL_UI_PORT") {
+            if let Ok(port_num) = port.parse() {
+                config.ui_server.port = port_num;
+            }
+        }
+        if let Ok(enabled) = std::env::var("AI_RECALL_UI_ENABLED") {
+            config.ui_server.enabled = enabled.parse().unwrap_or(true);
         }
         if let Ok(data_dir) = std::env::var("AI_RECALL_STORAGE_DATA_DIR") {
             config.storage.data_dir = data_dir.into();
