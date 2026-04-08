@@ -7,10 +7,12 @@ pub mod analysis;
 pub mod auth;
 pub mod config;
 pub mod embeddings;
+pub mod extractors;
 pub mod graph;
 pub mod mcp;
 pub mod models;
 pub mod storage;
+pub mod upload;
 
 // Re-export commonly used types
 pub use config::AppConfig;

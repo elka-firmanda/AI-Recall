@@ -16,6 +16,7 @@ Inspired by [Andrej Karpathy](https://karpathy.ai/)'s explorations of LLM-augmen
 - **🕸️ Graph Relationships**: Wiki-style linking between memories with backlink tracking
 - **📝 Markdown Storage**: Human-readable memory files with YAML frontmatter
 - **🔐 Authentication**: Bearer token auth for secure remote access
+- **🌐 Web UI**: Built-in browser interface for uploading PDFs and browsing memories
 - **🔄 MCP Protocol**: Native integration with Model Context Protocol
 - **📊 Feedback System**: Track memory usefulness ratings
 - **⚠️ Contradiction Detection**: Detect conflicting information across memories
@@ -75,6 +76,27 @@ sudo cp target/release/ai-recall /usr/local/bin/
 ai-recall init
 ai-recall serve
 ```
+
+## 🌐 Web UI
+
+AI Recall includes a built-in web interface for easy memory management:
+
+```bash
+# Access the UI (default password: admin)
+open http://localhost:8080/
+
+# Set custom password
+export AI_RECALL_UI_PASSWORD=your-secure-password
+ai-recall serve
+```
+
+**Features**:
+- 📄 Drag & drop PDF upload with automatic text extraction
+- 📊 Real-time queue status visualization
+- 🔍 Memory search and browsing
+- 🔐 Session-based authentication with rate limiting
+
+[Web UI Documentation →](docs/WEB_UI.md)
 
 ## 🔌 MCP Integration Guide
 

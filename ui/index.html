@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recall - Memory Upload</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen">
+            <div class="login-box">
+                <h1>AI Recall</h1>
+                <p class="subtitle">Memory Upload Interface</p>
+                <form id="login-form">
+                    <div class="input-group">
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                    <p id="login-error" class="error"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Interface -->
+        <div id="main-screen" class="screen hidden">
+            <header>
+                <h1>AI Recall</h1>
+                <div class="header-actions">
+                    <button id="logout-btn" class="btn-secondary">Logout</button>
+                </div>
+            </header>
+
+            <main>
+                <!-- Upload Zone -->
+                <section class="upload-section">
+                    <div id="drop-zone" class="drop-zone">
+                        <div class="drop-zone-content">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p class="drop-text">Drop PDF files here or click to browse</p>
+                            <input type="file" id="file-input" multiple accept=".pdf" hidden>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Queue Status -->
+                <section class="queue-section">
+                    <h2>Upload Queue</h2>
+                    <div id="queue-stats" class="queue-stats">
+                        <span class="stat"><span id="pending-count">0</span> pending</span>
+                        <span class="stat"><span id="processing-count">0</span> processing</span>
+                        <span class="stat"><span id="completed-count">0</span> completed</span>
+                        <span class="stat"><span id="failed-count">0</span> failed</span>
+                    </div>
+                    <div id="queue-list" class="queue-list">
+                        <p class="empty">No files in queue</p>
+                    </div>
+                </section>
+
+                <!-- Recent Memories -->
+                <section class="memories-section">
+                    <div class="section-header">
+                        <h2>Recent Memories</h2>
+                        <div class="search-box">
+                            <input type="text" id="search-input" placeholder="Search memories...">
+                            <button id="search-btn" class="btn-icon">🔍</button>
+                        </div>
+                    </div>
+                    <div id="memories-list" class="memories-list">
+                        <p class="empty">No memories yet</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

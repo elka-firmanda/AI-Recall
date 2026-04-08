@@ -1,9 +1,9 @@
 use anyhow::Result;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use tracing::{debug, info, warn};
+use tracing::info;
 
-use crate::models::{Memory, MemoryType};
+use crate::models::Memory;
 use crate::storage::markdown::MarkdownStorage;
 
 /// Detected contradiction between memories
@@ -199,8 +199,6 @@ impl ContradictionDetector {
 
     /// Check for temporal conflicts
     fn check_temporal_conflict(&self, a: &Memory, b: &Memory) -> Result<Option<Contradiction>> {
-        use chrono::Duration;
-
         // Check if both have dates in content
         let dates_a = extract_dates(a.content.as_deref().unwrap_or(""));
         let dates_b = extract_dates(b.content.as_deref().unwrap_or(""));

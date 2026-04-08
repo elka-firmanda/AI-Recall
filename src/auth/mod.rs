@@ -7,6 +7,8 @@ use axum::{
 use std::sync::Arc;
 use tracing::{debug, warn};
 
+pub mod session;
+
 /// Authentication middleware state
 #[derive(Clone)]
 pub struct AuthState {
